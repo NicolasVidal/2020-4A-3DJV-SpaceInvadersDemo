@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Rules = SpaceInvadersGameStateRules;
 
@@ -20,7 +21,9 @@ public class GameSystemScript : MonoBehaviour
         Rules.Init(ref gs);
 
         playerView = Instantiate(PlayerPrefab).GetComponent<Transform>();
-        agent = new RandomAgent();
+//        agent = new RandomAgent();
+//        agent = new HumanAgent();
+        agent = new RandomRolloutAgent();
     }
 
     void Update()
@@ -39,7 +42,7 @@ public class GameSystemScript : MonoBehaviour
 
     private void SyncEnemyViews()
     {
-        var enemiesToSpawn = gs.enemies.Count - enemiesView.Count;
+        var enemiesToSpawn = gs.enemies.Length - enemiesView.Count;
 
         for (var i = 0; i < enemiesToSpawn; i++)
         {
@@ -61,7 +64,7 @@ public class GameSystemScript : MonoBehaviour
 
     private void SyncProjectileViews()
     {
-        var projectilesToSpawn = gs.projectiles.Count - projectilesView.Count;
+        var projectilesToSpawn = gs.projectiles.Length - projectilesView.Count;
 
         for (var i = 0; i < projectilesToSpawn; i++)
         {
@@ -79,5 +82,11 @@ public class GameSystemScript : MonoBehaviour
         {
             projectilesView[i].position = gs.projectiles[i].position;
         }
+    }
+
+    private void OnDestroy()
+    {
+        gs.enemies.Dispose();
+        gs.projectiles.Dispose();
     }
 }

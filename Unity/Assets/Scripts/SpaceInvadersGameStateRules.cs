@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 public static class SpaceInvadersGameStateRules
 {
     public static void Init(ref SpaceInvadersGameState gs)
     {
-        gs.enemies = new List<Enemy>(10);
+        gs.enemies = new NativeList<Enemy>(10, Allocator.Persistent);
         for (var i = 0; i < 10; i++)
         {
             var enemy = new Enemy
@@ -17,10 +18,11 @@ public static class SpaceInvadersGameStateRules
             gs.enemies.Add(enemy);
         }
 
-        gs.projectiles = new List<Projectile>(100);
+        gs.projectiles = new NativeList<Projectile>(100, Allocator.Persistent);
         gs.playerPosition = new Vector2(0f, 0f);
         gs.isGameOver = false;
         gs.lastShootStep = -SpaceInvadersGameState.shootDelay;
+        gs.playerScore = 0;
     }
 
 
@@ -41,7 +43,7 @@ public static class SpaceInvadersGameStateRules
 
     static void UpdateEnemyPositions(ref SpaceInvadersGameState gs)
     {
-        for (var i = 0; i < gs.enemies.Count; i++)
+        for (var i = 0; i < gs.enemies.Length; i++)
         {
             var enemy = gs.enemies[i];
             enemy.position += gs.enemies[i].speed;
@@ -51,7 +53,7 @@ public static class SpaceInvadersGameStateRules
 
     static void UpdateProjectiles(ref SpaceInvadersGameState gs)
     {
-        for (var i = 0; i < gs.projectiles.Count; i++)
+        for (var i = 0; i < gs.projectiles.Length; i++)
         {
             var projectile = gs.projectiles[i];
             projectile.position += gs.projectiles[i].speed;
@@ -61,7 +63,7 @@ public static class SpaceInvadersGameStateRules
 
     static void HandleCollisions(ref SpaceInvadersGameState gs)
     {
-        for (var i = 0; i < gs.projectiles.Count; i++)
+        for (var i = 0; i < gs.projectiles.Length; i++)
         {
             var sqrDistance = (gs.projectiles[i].position - gs.playerPosition).sqrMagnitude;
 
@@ -76,16 +78,16 @@ public static class SpaceInvadersGameStateRules
             return;
         }
 
-        for (var i = 0; i < gs.projectiles.Count; i++)
+        for (var i = 0; i < gs.projectiles.Length; i++)
         {
             if (gs.projectiles[i].position.y > 10)
             {
-                gs.projectiles.RemoveAt(i);
+                gs.projectiles.RemoveAtSwapBack(i);
                 i--;
                 continue;
             }
 
-            for (var j = 0; j < gs.enemies.Count; j++)
+            for (var j = 0; j < gs.enemies.Length; j++)
             {
                 var sqrDistance = (gs.projectiles[i].position - gs.enemies[j].position).sqrMagnitude;
 
@@ -96,12 +98,18 @@ public static class SpaceInvadersGameStateRules
                     continue;
                 }
 
-                gs.projectiles.RemoveAt(i);
+                gs.projectiles.RemoveAtSwapBack(i);
                 i--;
-                gs.enemies.RemoveAt(j);
+                gs.enemies.RemoveAtSwapBack(j);
                 j--;
+                gs.playerScore += 100;
                 break;
             }
+        }
+
+        if (gs.enemies.Length == 0)
+        {
+            gs.isGameOver = true;
         }
     }
 
@@ -141,7 +149,7 @@ public static class SpaceInvadersGameStateRules
 
     static void HandleEnemyAtBottom(ref SpaceInvadersGameState gs)
     {
-        for (var i = 0; i < gs.enemies.Count; i++)
+        for (var i = 0; i < gs.enemies.Length; i++)
         {
             if (gs.enemies[i].position.y >= 0)
             {
@@ -161,5 +169,20 @@ public static class SpaceInvadersGameStateRules
     public static int[] GetAvailableActions(ref SpaceInvadersGameState gs)
     {
         return AvailableActions;
+    }
+
+    public static SpaceInvadersGameState Clone(ref SpaceInvadersGameState gs)
+    {
+        var gsCopy = new SpaceInvadersGameState();
+        gsCopy.enemies = new NativeList<Enemy>(gs.enemies.Length, Allocator.Temp);
+        gsCopy.enemies.AddRange(gs.enemies);
+        gsCopy.projectiles = new NativeList<Projectile>(gs.projectiles.Length, Allocator.Temp);
+        gsCopy.projectiles.AddRange(gs.projectiles);
+        gsCopy.playerPosition = gs.playerPosition;
+        gsCopy.currentGameStep = gs.currentGameStep;
+        gsCopy.isGameOver = gs.isGameOver;
+        gsCopy.lastShootStep = gsCopy.lastShootStep;
+
+        return gsCopy;
     }
 }
