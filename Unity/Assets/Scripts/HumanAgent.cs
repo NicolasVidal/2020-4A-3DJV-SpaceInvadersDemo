@@ -1,9 +1,10 @@
 ﻿using System;
+using Unity.Collections;
 using UnityEngine;
 
 public class HumanAgent : IAgent
 {
-    public int Act(ref SpaceInvadersGameState gs, int[] availableActions)
+    public int Act(ref SpaceInvadersGameState gs, NativeArray<int> availableActions)
     {
         if (Input.GetKey(KeyCode.Space))
         {

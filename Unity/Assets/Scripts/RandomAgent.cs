@@ -1,14 +1,16 @@
+using Unity.Collections;
 using UnityEngine;
 
 public interface IAgent
 {
-    int Act(ref SpaceInvadersGameState gs, int[] availableActions);
+    int Act(ref SpaceInvadersGameState gs, NativeArray<int> availableActions);
 }
 
-public class RandomAgent : IAgent
+public struct RandomAgent : IAgent
 {
-    public int Act(ref SpaceInvadersGameState gs, int[] availableActions)
+    public Unity.Mathematics.Random rdm;
+    
+    public int Act(ref SpaceInvadersGameState gs, NativeArray<int> availableActions)
     {
-        return availableActions[Random.Range(0, availableActions.Length)];
-    }
-}
+        return availableActions[rdm.NextInt(0, availableActions.Length)];
+    }}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using Rules = SpaceInvadersGameStateRules;
 
@@ -13,6 +14,7 @@ public class GameSystemScript : MonoBehaviour
 
     private readonly List<Transform> enemiesView = new List<Transform>();
     private readonly List<Transform> projectilesView = new List<Transform>();
+    private NativeArray<int> availableActions;
     private Transform playerView;
     private IAgent agent;
 
@@ -24,6 +26,8 @@ public class GameSystemScript : MonoBehaviour
 //        agent = new RandomAgent();
 //        agent = new HumanAgent();
         agent = new RandomRolloutAgent();
+        availableActions =
+            new NativeArray<int>(SpaceInvadersGameStateRules.GetAvailableActions(ref gs), Allocator.Persistent);
     }
 
     void Update()
@@ -32,12 +36,12 @@ public class GameSystemScript : MonoBehaviour
         {
             return;
         }
-        
+
         SyncEnemyViews();
         SyncProjectileViews();
         playerView.position = gs.playerPosition;
 
-        Rules.Step(ref gs, agent.Act(ref gs, Rules.GetAvailableActions(ref gs)));
+        Rules.Step(ref gs, agent.Act(ref gs, availableActions));
     }
 
     private void SyncEnemyViews()
@@ -88,5 +92,6 @@ public class GameSystemScript : MonoBehaviour
     {
         gs.enemies.Dispose();
         gs.projectiles.Dispose();
+        availableActions.Dispose();
     }
 }
