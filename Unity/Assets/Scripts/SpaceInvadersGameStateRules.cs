@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public static class SpaceInvadersGameStateRules
@@ -199,5 +200,41 @@ public static class SpaceInvadersGameStateRules
         gsCopy.lastShootStep = gs.lastShootStep;
         gsCopy.isGameOver = gs.isGameOver;
         gsCopy.playerScore = gs.playerScore;
+    }
+
+    public static long GetHashCode(ref SpaceInvadersGameState gs)
+    {
+        var hash = 0L;
+        hash = (long) math.round(math.clamp(gs.playerPosition.x, -4.49999f, 4.49999f) + 4.5);
+
+        var closestEnemyIndex = -1;
+        var closestEnemyXPosition = -1f;
+        var closestEnemyDistance = float.MaxValue;
+        var closestEnemyYPosition = float.MaxValue;
+
+        for (var i = 0; i < gs.enemies.Length; i++)
+        {
+            var enemyXPosition = gs.enemies[i].position.x;
+            var distance = math.abs(enemyXPosition - gs.playerPosition.x);
+
+            if (gs.enemies[i].position.y < closestEnemyYPosition
+                || Math.Abs(gs.enemies[i].position.y - closestEnemyYPosition) < 0.000001f
+                && distance < closestEnemyDistance)
+            {
+                closestEnemyIndex = i;
+                closestEnemyXPosition = enemyXPosition;
+                closestEnemyDistance = distance;
+                closestEnemyYPosition = gs.enemies[i].position.y;
+            }
+        }
+
+        if (closestEnemyIndex == -1)
+        {
+            return hash;
+        }
+        
+        hash += 10 + (long) math.round(math.clamp(closestEnemyXPosition, -4.49999f, 4.49999f) + 4.5);
+
+        return hash;
     }
 }
