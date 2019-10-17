@@ -233,7 +233,7 @@ public static class SpaceInvadersGameStateRules
             return hash;
         }
         
-        hash += 10 + (long) math.round(math.clamp(closestEnemyXPosition, -4.49999f, 4.49999f) + 4.5);
+        hash += 10 * (long) math.round(math.clamp(closestEnemyXPosition, -4.49999f, 4.49999f) + 4.5);
 
         return hash;
     }
